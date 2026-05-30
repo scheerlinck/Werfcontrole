@@ -787,6 +787,23 @@ function genPdf() {
 
 init();
 
+// Auto-sync elke 30 seconden
+setInterval(function() {
+  if (API_URL) loadFromSheet();
+}, 30000);
+
+// Sync wanneer je terugkomt naar de app (bv. van iPhone naar app)
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && API_URL) {
+    loadFromSheet();
+  }
+});
+
+// Sync bij focus op het venster
+window.addEventListener('focus', function() {
+  if (API_URL) loadFromSheet();
+});
+
 })();
 </script>
 </body>
