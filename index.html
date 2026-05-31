@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -445,7 +446,7 @@ function mailRapport() {
     setSyncOk();
 
     // Bouw de rapport URL
-    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId + '&api=' + encodeURIComponent(API_URL);
+    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId;
 
     // Open Outlook met de link
     var subject = encodeURIComponent('Werfcontrole' + annTitel + ' – ' + p.naam + ' – ' + new Date().toLocaleDateString('nl-BE'));
@@ -469,15 +470,51 @@ var currentRapportId = null;
 
 function openFeedback() {
   var p = getP(); if (!p) return;
-  // Haal alle feedback op voor dit project
+  var list = document.getElementById('feedback-list');
+  list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--mu);font-size:13px">Feedback ophalen...</div>';
+  document.getElementById('m-feedback').classList.remove('hidden');
   setSyncBusy();
 
-  // Zoek rapporten die bij dit project horen via de feedbacksheet
-  apiGet({ action: 'getFeedback', rapportId: 'project-' + curId }, function(err, data) {
+  // Haal alle feedback op - gebruik projectId als zoekterm
+  apiGet({ action: 'getFeedback', rapportId: curId }, function(err, data) {
     setSyncOk();
-    // Toon feedback modal met alle ontvangen feedback
-    showFeedbackModal(p);
+    if (!err && data && data.ok && data.items && data.items.length) {
+      renderFeedbackItems(p, data.items);
+    } else {
+      list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
+    }
   });
+}
+
+function renderFeedbackItems(p, items) {
+  var list = document.getElementById('feedback-list');
+  if (!items.length) {
+    list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.</div></div>';
+    return;
+  }
+  var gedaan = items.filter(function(i){ return i.gedaan; }).length;
+  var html = '<div style="background:var(--bg);border-radius:8px;padding:.6rem .9rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center">';
+  html += '<span style="font-size:13px;font-weight:600">&#128119; ' + esc(items[0].aannemer||'Aannemer') + '</span>';
+  html += '<span style="font-size:13px;color:var(--gr);font-weight:600">' + gedaan + '/' + items.length + ' afgewerkt</span>';
+  html += '</div>';
+  if (items[0].tijdstip) {
+    html += '<div style="font-size:11px;color:var(--mu);margin-bottom:.75rem">Ontvangen: ' + items[0].tijdstip + '</div>';
+  }
+  items.forEach(function(item) {
+    var origItem = (getP().items||[]).find(function(i){ return i.id === item.itemId; });
+    html += '<div style="border:1px solid var(--bdr);border-left:3px solid ' + (item.gedaan?'var(--gr)':'var(--or)') + ';border-radius:8px;padding:.6rem .9rem;margin-bottom:6px">';
+    html += '<div style="display:flex;align-items:center;gap:8px">';
+    html += '<div style="width:18px;height:18px;border-radius:4px;background:' + (item.gedaan?'var(--gr)':'var(--bg)') + ';border:1.5px solid ' + (item.gedaan?'var(--gr)':'var(--bdr)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+    if (item.gedaan) html += '<svg viewBox="0 0 12 12" width="10" height="10"><polyline points="1,6 5,10 11,2" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>';
+    html += '</div>';
+    html += '<span style="font-size:13px;font-weight:500">' + esc(origItem ? origItem.omschrijving : item.itemId) + '</span>';
+    html += '</div>';
+    if (item.notitie) {
+      html += '<div style="font-size:12px;color:var(--mu);margin-top:.35rem;padding-left:26px">&#128221; ' + esc(item.notitie) + '</div>';
+    }
+    html += '</div>';
+  });
+  list.innerHTML = html;
 }
 
 function showFeedbackModal(p) {
