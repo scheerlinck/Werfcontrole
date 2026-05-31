@@ -125,6 +125,16 @@ function init() {
     document.getElementById('error').style.display = 'block';
     return;
   }
+  loadRapport(rapportId);
+}
+
+function showError() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').textContent = 'Geen API verbinding. Vraag een nieuwe link aan de projectleider.';
+  document.getElementById('error').style.display = 'block';
+}
+
+function loadRapport(rapportId) {
   fetch(API_URL + '?action=getRapport&rapportId=' + encodeURIComponent(rapportId))
     .then(function(r) { return r.json(); })
     .then(function(data) {
