@@ -102,6 +102,9 @@ nav h2{font-size:15px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;
 .sync-dot.err{background:var(--or)}
 .sync-dot.busy{background:#f0a500;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:#E8593C;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;min-width:16px;animation:pulse 1.5s infinite}
+.feedback-item-new{background:#EEF4FF!important;border-color:#1B3A6B!important}
+.feedback-item-read{opacity:.7}
 @media(max-width:480px){.r2{grid-template-columns:1fr}.pgrid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -134,7 +137,7 @@ nav h2{font-size:15px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;
   <div class="nav-acts" id="na-list"><button class="btn-pr" id="btn-new-proj">+ Project</button></div>
   <div class="nav-acts hidden" id="na-det">
     <button class="btn-ic" id="btn-add-item">+ Punt</button>
-    <button class="btn-ic" id="btn-feedback">&#128233; Feedback</button>
+    <button class="btn-ic" id="btn-feedback">&#128233; Feedback<span id="feedback-badge" style="display:none" class="badge">!</span></button>
     <button class="btn-ic" id="btn-open-pdf">&#9993; Mail/PDF</button>
   </div>
 </nav>
@@ -475,39 +478,54 @@ function openFeedback() {
   document.getElementById('m-feedback').classList.remove('hidden');
   setSyncBusy();
 
-  // Haal alle feedback op - gebruik projectId als zoekterm
   apiGet({ action: 'getFeedback', rapportId: curId }, function(err, data) {
     setSyncOk();
     if (!err && data && data.ok && data.items && data.items.length) {
-      renderFeedbackItems(p, data.items);
+      // Markeer als gelezen
+      var readKey = 'feedback-read-' + curId;
+      var lastRead = {};
+      try { lastRead = JSON.parse(localStorage.getItem(readKey) || '{}'); } catch(e) {}
+      data.items.forEach(function(item) { lastRead[item.itemId] = item.tijdstip; });
+      try { localStorage.setItem(readKey, JSON.stringify(lastRead)); } catch(e) {}
+      // Verberg badge
+      var badge = document.getElementById('feedback-badge');
+      if (badge) badge.style.display = 'none';
+      renderFeedbackItems(p, data.items, {});
     } else {
       list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
     }
   });
 }
 
-function renderFeedbackItems(p, items) {
+function renderFeedbackItems(p, items, readItems) {
   var list = document.getElementById('feedback-list');
   if (!items.length) {
     list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.</div></div>';
     return;
   }
   var gedaan = items.filter(function(i){ return i.gedaan; }).length;
+  var nieuweItems = items.filter(function(i){ return readItems && readItems[i.itemId] !== i.tijdstip; }).length;
+
   var html = '<div style="background:var(--bg);border-radius:8px;padding:.6rem .9rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center">';
   html += '<span style="font-size:13px;font-weight:600">&#128119; ' + esc(items[0].aannemer||'Aannemer') + '</span>';
   html += '<span style="font-size:13px;color:var(--gr);font-weight:600">' + gedaan + '/' + items.length + ' afgewerkt</span>';
   html += '</div>';
+  if (nieuweItems > 0) {
+    html += '<div style="background:#EEF4FF;border:1px solid #c3d6ff;border-radius:8px;padding:.5rem .75rem;font-size:12px;color:var(--bl);margin-bottom:.75rem;font-weight:500">&#128276; ' + nieuweItems + ' nieuw' + (nieuweItems > 1 ? 'e' : '') + ' update' + (nieuweItems > 1 ? 's' : '') + '</div>';
+  }
   if (items[0].tijdstip) {
     html += '<div style="font-size:11px;color:var(--mu);margin-bottom:.75rem">Ontvangen: ' + items[0].tijdstip + '</div>';
   }
   items.forEach(function(item) {
     var origItem = (getP().items||[]).find(function(i){ return i.id === item.itemId; });
-    html += '<div style="border:1px solid var(--bdr);border-left:3px solid ' + (item.gedaan?'var(--gr)':'var(--or)') + ';border-radius:8px;padding:.6rem .9rem;margin-bottom:6px">';
+    var isNieuw = readItems && readItems[item.itemId] !== item.tijdstip;
+    html += '<div style="border:1px solid ' + (isNieuw?'#1B3A6B':'var(--bdr)') + ';border-left:3px solid ' + (item.gedaan?'var(--gr)':'var(--or)') + ';border-radius:8px;padding:.6rem .9rem;margin-bottom:6px;background:' + (isNieuw?'#f0f4ff':'var(--card)') + '">';
+    if (isNieuw) html += '<div style="font-size:10px;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">&#128276; Nieuw</div>';
     html += '<div style="display:flex;align-items:center;gap:8px">';
     html += '<div style="width:18px;height:18px;border-radius:4px;background:' + (item.gedaan?'var(--gr)':'var(--bg)') + ';border:1.5px solid ' + (item.gedaan?'var(--gr)':'var(--bdr)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">';
     if (item.gedaan) html += '<svg viewBox="0 0 12 12" width="10" height="10"><polyline points="1,6 5,10 11,2" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>';
     html += '</div>';
-    html += '<span style="font-size:13px;font-weight:500">' + esc(origItem ? origItem.omschrijving : item.itemId) + '</span>';
+    html += '<span style="font-size:13px;font-weight:' + (isNieuw?'600':'500') + '">' + esc(origItem ? origItem.omschrijving : item.itemId) + '</span>';
     html += '</div>';
     if (item.notitie) {
       html += '<div style="font-size:12px;color:var(--mu);margin-top:.35rem;padding-left:26px">&#128221; ' + esc(item.notitie) + '</div>';
@@ -687,6 +705,7 @@ function openProject(id) {
   document.getElementById('tab-ann').classList.remove('active');
   renderItems();
   loadFromSheet();
+  setTimeout(checkFeedbackBadge, 2000);
 }
 
 function goBack() {
@@ -1009,6 +1028,25 @@ init();
 setInterval(function() {
   if (API_URL) loadFromSheet();
 }, 30000);
+
+// Check nieuwe feedback elke 60 seconden als in project
+setInterval(function() {
+  if (API_URL && curId) checkFeedbackBadge();
+}, 60000);
+
+function checkFeedbackBadge() {
+  apiGet({ action: 'getFeedback', rapportId: curId }, function(err, data) {
+    if (err || !data || !data.ok || !data.items || !data.items.length) return;
+    var readKey = 'feedback-read-' + curId;
+    var lastRead = {};
+    try { lastRead = JSON.parse(localStorage.getItem(readKey) || '{}'); } catch(e) {}
+    var hasNew = data.items.some(function(item) {
+      return lastRead[item.itemId] !== item.tijdstip;
+    });
+    var badge = document.getElementById('feedback-badge');
+    if (badge) badge.style.display = hasNew ? 'inline-flex' : 'none';
+  });
+}
 
 // Sync wanneer je terugkomt naar de app (bv. van iPhone naar app)
 document.addEventListener('visibilitychange', function() {
