@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -106,14 +107,24 @@ function getParam(name) {
 
 function init() {
   var rapportId = getParam('id');
-  API_URL = getParam('api');
+  API_URL = getParam('api') || '';
 
-  if (!rapportId || !API_URL) {
+  if (!rapportId) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error').style.display = 'block';
     return;
   }
 
+  // Als geen API URL in params, probeer uit localStorage
+  if (!API_URL) {
+    try { API_URL = localStorage.getItem('werf_api_url') || ''; } catch(e) {}
+  }
+  if (!API_URL) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').innerHTML = 'Geen API verbinding. Open de link opnieuw via de app.';
+    document.getElementById('error').style.display = 'block';
+    return;
+  }
   fetch(API_URL + '?action=getRapport&rapportId=' + encodeURIComponent(rapportId))
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -123,6 +134,10 @@ function init() {
         return;
       }
       rapportData = data.rapport;
+      // Haal API URL op uit rapport data als die niet in URL staat
+      if (!API_URL && rapportData.apiUrl) {
+        API_URL = rapportData.apiUrl;
+      }
       renderRapport();
     })
     .catch(function() {
@@ -172,7 +187,7 @@ function renderRapport() {
       }
       html += '<div class="item" id="wrap-' + item.id + '">';
       html += '<div class="item-row">';
-      html += '<div class="chk-box" id="chk-' + item.id + '" onclick="toggle('' + item.id + '')">';
+      html += '<div class="chk-box" id="chk-' + item.id + '" onclick="toggle(\'' + item.id + '\')">';
       html += '<div class="chk-tick"></div></div>';
       html += '<div class="item-body">';
       html += '<div class="item-title" id="title-' + item.id + '">' + esc(item.omschrijving) + '</div>';
@@ -184,7 +199,7 @@ function renderRapport() {
       html += photos;
       html += '<div class="nota-wrap">';
       html += '<div class="nota-label">&#128221; Notitie / opmerking</div>';
-      html += '<textarea class="nota-input" id="nota-' + item.id + '" placeholder="Voeg een opmerking toe..." oninput="saveNota('' + item.id + '',this.value)"></textarea>';
+      html += '<textarea class="nota-input" id="nota-' + item.id + '" placeholder="Voeg een opmerking toe..." oninput="saveNota(\'' + item.id + '\',this.value)"></textarea>';
       html += '</div></div>';
     });
   });
