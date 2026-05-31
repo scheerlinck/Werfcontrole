@@ -133,7 +133,8 @@ nav h2{font-size:15px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;
   <div class="nav-acts" id="na-list"><button class="btn-pr" id="btn-new-proj">+ Project</button></div>
   <div class="nav-acts hidden" id="na-det">
     <button class="btn-ic" id="btn-add-item">+ Punt</button>
-    <button class="btn-ic" id="btn-open-pdf">&#8681; PDF</button>
+    <button class="btn-ic" id="btn-feedback">&#128233; Feedback</button>
+    <button class="btn-ic" id="btn-open-pdf">&#9993; Mail/PDF</button>
   </div>
 </nav>
 
@@ -191,14 +192,30 @@ nav h2{font-size:15px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;
 
 <div class="mb hidden" id="m-pdf">
   <div class="md">
-    <h3>Rapport downloaden</h3>
-    <div class="ibox">Er wordt een bestand gedownload. Open het in Chrome of Edge en klik op <strong>"Afdrukken / PDF"</strong>.</div>
+    <h3>Rapport & Mail</h3>
     <div class="pdfopt sel" id="po-ann"><div style="font-size:22px">&#128119;</div><div><div style="font-size:13px;font-weight:600">Per aannemer</div><div style="font-size:12px;color:var(--mu)">Kies 1 aannemer of alle</div></div></div>
     <div class="pdfopt" id="po-stat"><div style="font-size:22px">&#128203;</div><div><div style="font-size:13px;font-weight:600">Open / Afgewerkt</div><div style="font-size:12px;color:var(--mu)">Eerst open, dan klaar</div></div></div>
     <div class="fi"><label>Aannemer</label><select id="pdf-ann" style="width:100%;border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--tx);outline:none"><option value="alle">Alle aannemers</option></select></div>
     <div class="fi"><label>Toon</label><select id="pdf-fil" style="width:100%;border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--tx);outline:none"><option value="alle">Alle punten</option><option value="open">Enkel open</option><option value="done">Enkel afgewerkt</option></select></div>
     <div class="fi" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="pdf-foto" checked style="width:16px;height:16px;cursor:pointer"><label for="pdf-foto" style="font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--tx)">Foto's opnemen</label></div>
-    <div class="ma"><button class="btn-ca" id="btn-cancel-pdf">Annuleer</button><button class="btn-pr" id="btn-gen-pdf">&#8681; Rapport downloaden</button></div>
+    <div style="border-top:1px solid var(--bdr);margin:.75rem 0;padding-top:.75rem">
+      <div style="font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.5rem">Mailen naar aannemer</div>
+      <div class="fi"><label>E-mailadres aannemer</label><input id="pdf-email" type="email" placeholder="aannemer@bedrijf.be"></div>
+    </div>
+    <div class="ma">
+      <button class="btn-ca" id="btn-cancel-pdf">Annuleer</button>
+      <button class="btn-ic" id="btn-gen-pdf">&#8681; PDF downloaden</button>
+      <button class="btn-pr" id="btn-mail-pdf">&#9993; Mailen</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FEEDBACK VAN AANNEMER -->
+<div class="mb hidden" id="m-feedback">
+  <div class="md" style="max-width:600px">
+    <h3>&#128233; Feedback aannemer</h3>
+    <div id="feedback-list" style="margin-bottom:1rem"></div>
+    <div class="ma"><button class="btn-ca" id="btn-close-feedback">Sluiten</button></div>
   </div>
 </div>
 
@@ -381,6 +398,166 @@ function getP() { return db.projects.find(function(p) { return p.id === curId; }
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ── Rapport mailen ────────────────────────────────────────
+function mailRapport() {
+  var p = getP(); if (!p) return;
+  var email = document.getElementById('pdf-email').value.trim();
+  var annFil = document.getElementById('pdf-ann').value;
+  var filVal = document.getElementById('pdf-fil').value;
+  var showFoto = document.getElementById('pdf-foto').checked;
+
+  if (!email) { alert('Vul een e-mailadres in.'); return; }
+
+  // Genereer uniek rapport ID
+  var rapportId = 'r' + Date.now().toString(36);
+  var datum = new Date().toLocaleDateString('nl-BE', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  var annTitel = annFil !== 'alle' ? ' – ' + annFil : '';
+
+  // Filter items
+  var items = (p.items||[]).slice();
+  if (annFil !== 'alle') items = items.filter(function(i){ return (i.aannemer||'Geen aannemer') === annFil; });
+  if (filVal === 'open') items = items.filter(function(i){ return !i.done; });
+  if (filVal === 'done') items = items.filter(function(i){ return i.done; });
+
+  if (!items.length) { alert('Geen punten om te versturen.'); return; }
+
+  // Sla rapport op in Drive via API
+  var rapportData = {
+    action: 'saveRapport',
+    rapportId: rapportId,
+    projectNaam: p.naam,
+    projectAdres: p.adres || '',
+    aannemer: annFil !== 'alle' ? annFil : 'Alle aannemers',
+    datum: datum,
+    apiUrl: API_URL,
+    showFoto: showFoto,
+    items: items
+  };
+
+  setSyncBusy();
+  apiPost(rapportData, function(err, data) {
+    if (err || !data || !data.ok) {
+      setSyncErr();
+      alert('Fout bij opslaan rapport. Probeer opnieuw.');
+      return;
+    }
+    setSyncOk();
+
+    // Bouw de rapport URL
+    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId + '&api=' + encodeURIComponent(API_URL);
+
+    // Open Outlook met de link
+    var subject = encodeURIComponent('Werfcontrole' + annTitel + ' – ' + p.naam + ' – ' + new Date().toLocaleDateString('nl-BE'));
+    var body = encodeURIComponent('Beste,\n\nGelieve onderstaande punten na te kijken en af te vinken wat uitgevoerd is.\nU kunt ook een notitie toevoegen per punt.\n\nKlik op de link om het rapport te openen:\n' + rapportUrl + '\n\nProject: ' + p.naam + '\n' + (p.adres ? 'Adres: ' + p.adres + '\n' : '') + 'Datum: ' + datum + '\n\nMet vriendelijke groeten');
+
+    var mailtoLink = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
+    window.location.href = mailtoLink;
+    closeModal('m-pdf');
+
+    // Kopieer link naar klembord als backup
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(rapportUrl).then(function() {
+        alert('Outlook opent nu. De rapport-link is ook gekopieerd naar uw klembord als backup.');
+      });
+    }
+  });
+}
+
+// ── Feedback bekijken ─────────────────────────────────────
+var currentRapportId = null;
+
+function openFeedback() {
+  var p = getP(); if (!p) return;
+  // Haal alle feedback op voor dit project
+  setSyncBusy();
+
+  // Zoek rapporten die bij dit project horen via de feedbacksheet
+  apiGet({ action: 'getFeedback', rapportId: 'project-' + curId }, function(err, data) {
+    setSyncOk();
+    // Toon feedback modal met alle ontvangen feedback
+    showFeedbackModal(p);
+  });
+}
+
+function showFeedbackModal(p) {
+  var list = document.getElementById('feedback-list');
+
+  // Controleer alle items op feedback
+  var items = (p.items||[]);
+  if (!items.length) {
+    list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
+    document.getElementById('m-feedback').classList.remove('hidden');
+    return;
+  }
+
+  // Haal feedback op per aannemer
+  var aannemers = [...new Set(items.map(function(i){ return i.aannemer||'Geen aannemer'; }))].filter(Boolean);
+  var allFeedback = {};
+  var remaining = aannemers.length;
+
+  if (!remaining) {
+    list.innerHTML = '<div class="empty"><div style="font-size:13px">Geen aannemers gevonden.</div></div>';
+    document.getElementById('m-feedback').classList.remove('hidden');
+    return;
+  }
+
+  list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--mu);font-size:13px">Feedback ophalen...</div>';
+  document.getElementById('m-feedback').classList.remove('hidden');
+
+  // Haal feedback op voor elke aannemer
+  aannemers.forEach(function(aannemer) {
+    apiGet({ action: 'getFeedback', rapportId: 'latest-' + curId + '-' + aannemer.replace(/[^a-zA-Z0-9]/g,'-') }, function(err, data) {
+      remaining--;
+      if (!err && data && data.ok && data.items && data.items.length) {
+        allFeedback[aannemer] = data.items;
+      }
+      if (remaining === 0) renderFeedback(p, allFeedback);
+    });
+  });
+}
+
+function renderFeedback(p, allFeedback) {
+  var list = document.getElementById('feedback-list');
+  var keys = Object.keys(allFeedback);
+
+  if (!keys.length) {
+    list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
+    return;
+  }
+
+  var html = '';
+  keys.forEach(function(aannemer) {
+    var fb = allFeedback[aannemer];
+    var gedaan = fb.filter(function(i){ return i.gedaan; }).length;
+    html += '<div style="margin-bottom:1rem">';
+    html += '<div style="font-size:13px;font-weight:600;background:var(--bg);padding:.5rem .75rem;border-radius:8px;margin-bottom:.5rem;display:flex;justify-content:space-between">';
+    html += '<span>&#128119; ' + esc(aannemer) + '</span>';
+    html += '<span style="color:var(--gr)">' + gedaan + '/' + fb.length + ' afgewerkt</span>';
+    html += '</div>';
+    fb.forEach(function(item) {
+      html += '<div style="border:1px solid var(--bdr);border-left:3px solid ' + (item.gedaan?'var(--gr)':'var(--or)') + ';border-radius:8px;padding:.6rem .9rem;margin-bottom:6px">';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
+      html += '<div style="width:16px;height:16px;border-radius:4px;background:' + (item.gedaan?'var(--gr)':'var(--bg)') + ';border:1.5px solid ' + (item.gedaan?'var(--gr)':'var(--bdr)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+      if (item.gedaan) html += '<svg viewBox="0 0 12 12" width="10" height="10"><polyline points="1,6 5,10 11,2" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>';
+      html += '</div>';
+      // Zoek omschrijving op basis van itemId
+      var p2 = getP();
+      var origItem = (p2.items||[]).find(function(i){ return i.id === item.itemId; });
+      html += '<span style="font-size:13px;font-weight:500">' + esc(origItem ? origItem.omschrijving : item.itemId) + '</span>';
+      html += '</div>';
+      if (item.notitie) {
+        html += '<div style="font-size:12px;color:var(--mu);margin-top:.35rem;padding-left:24px">&#128221; ' + esc(item.notitie) + '</div>';
+      }
+      if (item.tijdstip) {
+        html += '<div style="font-size:11px;color:var(--mu);margin-top:.25rem;padding-left:24px">' + item.tijdstip + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
 function openPhoto(src) { document.getElementById('lb-img').src = src; document.getElementById('lbx').classList.remove('hidden'); }
 
 // ── Nav ───────────────────────────────────────────────────
@@ -394,6 +571,9 @@ document.getElementById('btn-cancel-item').addEventListener('click', function() 
 document.getElementById('btn-save-item').addEventListener('click', saveItem);
 document.getElementById('btn-cancel-pdf').addEventListener('click', function() { closeModal('m-pdf'); });
 document.getElementById('btn-gen-pdf').addEventListener('click', genPdf);
+document.getElementById('btn-mail-pdf').addEventListener('click', mailRapport);
+document.getElementById('btn-feedback').addEventListener('click', openFeedback);
+document.getElementById('btn-close-feedback').addEventListener('click', function() { closeModal('m-feedback'); });
 document.getElementById('tab-lijst').addEventListener('click', function() { setTab('lijst'); });
 document.getElementById('tab-ann').addEventListener('click', function() { setTab('aannemer'); });
 document.getElementById('po-ann').addEventListener('click', function() { selPdf('aannemer'); });
@@ -647,6 +827,7 @@ function openPdfModal() {
   (p.items||[]).forEach(function(i) { var k = i.aannemer||'Geen aannemer'; if (aannemers.indexOf(k) < 0) aannemers.push(k); });
   aannemers.sort();
   sel.innerHTML = '<option value="alle">Alle aannemers</option>' + aannemers.map(function(a) { return '<option value="'+esc(a)+'">'+esc(a)+'</option>'; }).join('');
+  document.getElementById('pdf-email').value = '';
   document.getElementById('m-pdf').classList.remove('hidden');
 }
 
