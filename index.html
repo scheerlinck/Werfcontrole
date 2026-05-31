@@ -453,7 +453,7 @@ function mailRapport() {
 
     // Open Outlook met de link
     var subject = encodeURIComponent('Werfcontrole' + annTitel + ' – ' + p.naam + ' – ' + new Date().toLocaleDateString('nl-BE'));
-    var body = encodeURIComponent('Beste,\\n\\nGelieve onderstaande punten na te kijken en af te vinken wat uitgevoerd is.\\nU kunt ook een notitie toevoegen per punt.\\n\\nKlik op de link hieronder:\\n\\n' + rapportUrl + '\\n\\n(Niet klikbaar? Kopieer en plak in uw browser)\\n\\nProject: ' + p.naam + '\\n' + (p.adres ? 'Adres: ' + p.adres + '\\n' : '') + 'Datum: ' + datum + '\\n\\nMet vriendelijke groeten')
+    var body = encodeURIComponent('Beste,' + String.fromCharCode(13,10) + String.fromCharCode(13,10)+ 'Gelieve onderstaande punten na te kijken en af te vinken wat uitgevoerd is.' + String.fromCharCode(13,10)+ 'U kunt ook een notitie toevoegen per punt.' + String.fromCharCode(13,10) + String.fromCharCode(13,10)+ 'Klik op de link hieronder:' + String.fromCharCode(13,10)+ rapportUrl + String.fromCharCode(13,10) + String.fromCharCode(13,10)+ '(Niet klikbaar? Kopieer en plak in uw browser)' + String.fromCharCode(13,10) + String.fromCharCode(13,10)+ 'Project: ' + p.naam + String.fromCharCode(13,10)+ (p.adres ? 'Adres: ' + p.adres + String.fromCharCode(13,10) : '')+ 'Datum: ' + datum + String.fromCharCode(13,10) + String.fromCharCode(13,10)+ 'Met vriendelijke groeten')
 
     var mailtoLink = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
     window.location.href = mailtoLink;
