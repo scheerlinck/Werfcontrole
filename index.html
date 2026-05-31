@@ -449,7 +449,7 @@ function mailRapport() {
     setSyncOk();
 
     // Bouw de rapport URL
-    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId + '&api=' + encodeURIComponent(API_URL);
+    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId;
 
     // Open Outlook met de link
     var subject = encodeURIComponent('Werfcontrole' + annTitel + ' – ' + p.naam + ' – ' + new Date().toLocaleDateString('nl-BE'));
