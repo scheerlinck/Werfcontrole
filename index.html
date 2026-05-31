@@ -453,7 +453,7 @@ function mailRapport() {
 
     // Open Outlook met de link
     var subject = encodeURIComponent('Werfcontrole' + annTitel + ' – ' + p.naam + ' – ' + new Date().toLocaleDateString('nl-BE'));
-    var body = encodeURIComponent('Beste,\n\nGelieve onderstaande punten na te kijken en af te vinken wat uitgevoerd is.\nU kunt ook een notitie toevoegen per punt.\n\nKlik op de link om het rapport te openen:\n' + rapportUrl + '\n\nProject: ' + p.naam + '\n' + (p.adres ? 'Adres: ' + p.adres + '\n' : '') + 'Datum: ' + datum + '\n\nMet vriendelijke groeten');
+    var body = encodeURIComponent('Beste,\\n\\nGelieve onderstaande punten na te kijken en af te vinken wat uitgevoerd is.\\nU kunt ook een notitie toevoegen per punt.\\n\\nKlik op de link hieronder:\\n\\n' + rapportUrl + '\\n\\n(Niet klikbaar? Kopieer en plak in uw browser)\\n\\nProject: ' + p.naam + '\\n' + (p.adres ? 'Adres: ' + p.adres + '\\n' : '') + 'Datum: ' + datum + '\\n\\nMet vriendelijke groeten')
 
     var mailtoLink = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
     window.location.href = mailtoLink;
@@ -481,16 +481,19 @@ function openFeedback() {
   apiGet({ action: 'getFeedback', rapportId: curId }, function(err, data) {
     setSyncOk();
     if (!err && data && data.ok && data.items && data.items.length) {
-      // Markeer als gelezen
       var readKey = 'feedback-read-' + curId;
+      // Haal EERST de oude staat op voor rendering (om nieuw/gelezen te tonen)
       var lastRead = {};
       try { lastRead = JSON.parse(localStorage.getItem(readKey) || '{}'); } catch(e) {}
-      data.items.forEach(function(item) { lastRead[item.itemId] = item.tijdstip; });
-      try { localStorage.setItem(readKey, JSON.stringify(lastRead)); } catch(e) {}
+      // Render met de oude staat zodat "Nieuw" correct getoond wordt
+      renderFeedbackItems(p, data.items, lastRead);
+      // Daarna pas markeren als gelezen
+      var newRead = {};
+      data.items.forEach(function(item) { newRead[item.itemId] = item.tijdstip; });
+      try { localStorage.setItem(readKey, JSON.stringify(newRead)); } catch(e) {}
       // Verberg badge
       var badge = document.getElementById('feedback-badge');
       if (badge) badge.style.display = 'none';
-      renderFeedbackItems(p, data.items, {});
     } else {
       list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
     }
