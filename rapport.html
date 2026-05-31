@@ -115,13 +115,13 @@ function init() {
     return;
   }
 
-  // Als geen API URL in params, probeer uit localStorage
+  // Probeer API URL uit localStorage als niet in params
   if (!API_URL) {
     try { API_URL = localStorage.getItem('werf_api_url') || ''; } catch(e) {}
   }
   if (!API_URL) {
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('error').innerHTML = 'Geen API verbinding. Open de link opnieuw via de app.';
+    document.getElementById('error').textContent = 'Geen API verbinding. Gebruik de link uit de mail.';
     document.getElementById('error').style.display = 'block';
     return;
   }
