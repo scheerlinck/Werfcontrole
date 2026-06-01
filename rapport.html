@@ -12,42 +12,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .topbar img{height:36px;width:auto;object-fit:contain}
 .topbar h1{font-size:15px;font-weight:600;flex:1}
 .btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-family:inherit;font-weight:600;cursor:pointer}
-.btn-gr{background:#2A9D6A;color:#fff}
-.btn-gr:hover{opacity:.88}
+.btn-gr{background:#2A9D6A;color:#fff}.btn-gr:hover{opacity:.88}
 .btn-wh{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)}
-.btn-wh:hover{background:rgba(255,255,255,.25)}
 .container{max-width:780px;margin:0 auto;padding:1rem 1rem 6rem}
 .card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .card h2{font-size:18px;font-weight:700;color:#1B3A6B;margin-bottom:.25rem}
-.card .meta{font-size:12px;color:#6b6b67;margin-top:4px}
 .stats{display:flex;gap:10px;margin-top:1rem}
 .stat{border:1px solid #e0ddd6;border-radius:8px;padding:.6rem 1rem;text-align:center;flex:1}
 .stat-n{font-size:20px;font-weight:700}
 .stat-n.op{color:#E8593C}.stat-n.dn{color:#2A9D6A}
 .stat-l{font-size:10px;color:#6b6b67;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 .group-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b6b67;padding:.5rem 0;border-bottom:1px solid #e0ddd6;margin-bottom:.75rem}
-.item{background:#fff;border:1px solid #e0ddd6;border-left:3px solid #E8593C;border-radius:10px;padding:.9rem 1rem;margin-bottom:8px;transition:all .2s}
-.item.done{border-left-color:#2A9D6A;opacity:.75}
+.item{background:#fff;border:1px solid #e0ddd6;border-left:3px solid #E8593C;border-radius:10px;padding:.9rem 1rem;margin-bottom:8px}
+.item.done{border-left-color:#2A9D6A}
 .item-row{display:flex;align-items:flex-start;gap:10px}
 .chk-box{width:26px;height:26px;border-radius:7px;border:2px solid #e0ddd6;background:#f5f4f0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .2s}
 .chk-box.checked{background:#2A9D6A;border-color:#2A9D6A}
 .chk-tick{display:none;width:8px;height:12px;border:2.5px solid #fff;border-top:none;border-left:none;transform:rotate(42deg) translate(0,-1px)}
 .chk-box.checked .chk-tick{display:block}
-.item-body{flex:1;min-width:0}
 .item-title{font-size:14px;font-weight:500;margin-bottom:3px;word-break:break-word}
 .item-title.done-title{text-decoration:line-through;color:#6b6b67}
-.item-meta{font-size:11px;color:#6b6b67;line-height:1.6}
-.item-photos{display:flex;flex-wrap:wrap;gap:5px;margin-top:.5rem}
-.item-photo{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid #e0ddd6;cursor:zoom-in;transition:transform .1s}
+.item-meta{font-size:11px;color:#6b6b67;line-height:1.6;margin-bottom:.5rem}
+.item-photos{display:flex;flex-wrap:wrap;gap:5px;margin-top:.5rem;margin-bottom:.5rem}
+.item-photo{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid #e0ddd6;cursor:zoom-in}
 .item-photo:hover{transform:scale(1.06)}
-.nota-wrap{margin-top:.6rem}
-.nota-label{font-size:11px;font-weight:600;color:#6b6b67;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.nota-label{font-size:11px;font-weight:600;color:#6b6b67;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;margin-top:.5rem}
 .nota-input{width:100%;border:1px solid #e0ddd6;border-radius:7px;padding:6px 10px;font-family:inherit;font-size:13px;background:#f9f8f5;color:#1a1a18;outline:none;resize:vertical;min-height:52px}
 .nota-input:focus{border-color:#1B3A6B}
 .bottombar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0ddd6;padding:.75rem 1rem;display:flex;align-items:center;gap:10px;box-shadow:0 -2px 8px rgba(0,0,0,.08);z-index:100}
 .counter{font-size:13px;color:#6b6b67;flex:1}
-.loading{text-align:center;padding:3rem 1rem;color:#6b6b67}
-.loading-icon{font-size:36px;margin-bottom:.5rem}
+.loading{text-align:center;padding:3rem 1rem;color:#6b6b67;font-size:14px}
 .error-box{background:#FDE8E3;border-radius:10px;padding:1rem;color:#9B3B28;font-size:13px;text-align:center;margin:1rem}
 .lbx{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;align-items:center;justify-content:center;cursor:zoom-out}
 .lbx.on{display:flex}
@@ -58,7 +52,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .success-icon{font-size:48px;margin-bottom:.75rem}
 .success-title{font-size:18px;font-weight:700;color:#2A9D6A;margin-bottom:.5rem}
 .success-text{font-size:13px;color:#6b6b67;line-height:1.6}
-@media print{.topbar,.bottombar,.nota-wrap,.lbx{display:none!important}body{background:#fff}@page{margin:1.5cm}}
+@media print{.topbar,.bottombar,.nota-label,.nota-input,.lbx{display:none!important}body{background:#fff}@page{margin:1.5cm}}
 </style>
 </head>
 <body>
@@ -70,28 +64,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 </div>
 
 <div class="container">
-  <div id="loading" class="loading">
-    <div class="loading-icon">&#128203;</div>
-    <div>Rapport laden...</div>
-  </div>
+  <div id="loading" class="loading">&#128203; Rapport laden...</div>
   <div id="content" style="display:none"></div>
-  <div id="error" class="error-box" style="display:none">Rapport niet gevonden. Controleer de link.</div>
+  <div id="error" class="error-box" style="display:none"></div>
 </div>
 
 <div class="bottombar" id="bottombar" style="display:none">
   <div class="counter" id="counter">0 van 0 afgewerkt</div>
-  <button class="btn btn-gr" id="btn-verstuur" onclick="verstuur()">&#10003; Versturen naar projectleider</button>
+  <button class="btn btn-gr" onclick="verstuur()">&#10003; Versturen naar projectleider</button>
 </div>
 
-<div class="lbx" id="lbx" onclick="this.classList.remove('on')">
-  <img id="lbx-img" src="">
-</div>
-
+<div class="lbx" id="lbx"><img id="lbx-img" src=""></div>
 <div class="success-overlay" id="success">
   <div class="success-card">
     <div class="success-icon">&#10003;</div>
     <div class="success-title">Verstuurd!</div>
-    <div class="success-text">Uw feedback is doorgestuurd naar de projectleider. U kunt deze pagina nu sluiten.</div>
+    <div class="success-text">Uw feedback is doorgestuurd naar de projectleider.</div>
   </div>
 </div>
 
@@ -105,55 +93,54 @@ function getParam(name) {
   return match ? decodeURIComponent(match[1]) : '';
 }
 
-function init() {
-  var rapportId = getParam('id');
-  API_URL = getParam('api') || '';
-
-  if (!rapportId) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error').style.display = 'block';
-    return;
-  }
-
-  // Probeer API URL uit localStorage als niet in params
-  if (!API_URL) {
-    try { API_URL = localStorage.getItem('werf_api_url') || ''; } catch(e) {}
-  }
-  if (!API_URL) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error').textContent = 'Geen API verbinding. Gebruik de link uit de mail.';
-    document.getElementById('error').style.display = 'block';
-    return;
-  }
-  loadRapport(rapportId);
+function showError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').textContent = msg || 'Rapport niet gevonden.';
+  document.getElementById('error').style.display = 'block';
 }
 
-function showError() {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('error').textContent = 'Geen API verbinding. Vraag een nieuwe link aan de projectleider.';
-  document.getElementById('error').style.display = 'block';
+function init() {
+  var rapportId = getParam('id');
+  if (!rapportId) { showError('Geen rapport ID gevonden in de link.'); return; }
+
+  // Probeer API URL in volgorde: URL param → localStorage → api-config.txt
+  API_URL = getParam('api') || '';
+  if (API_URL) {
+    try { localStorage.setItem('werf_api_url', API_URL); } catch(e) {}
+    loadRapport(rapportId);
+    return;
+  }
+  try { API_URL = localStorage.getItem('werf_api_url') || ''; } catch(e) {}
+  if (API_URL) { loadRapport(rapportId); return; }
+
+  // Haal op uit api-config.txt
+  fetch('https://scheerlinck.github.io/Werfcontrole/api-config.txt?t=' + Date.now())
+    .then(function(r) { return r.text(); })
+    .then(function(url) {
+      url = url.trim();
+      if (url && url.indexOf('https://') === 0) {
+        API_URL = url;
+        try { localStorage.setItem('werf_api_url', API_URL); } catch(e) {}
+        loadRapport(rapportId);
+      } else {
+        showError('Geen API verbinding. Vraag een nieuwe link aan de projectleider.');
+      }
+    })
+    .catch(function() {
+      showError('Geen API verbinding. Vraag een nieuwe link aan de projectleider.');
+    });
 }
 
 function loadRapport(rapportId) {
   fetch(API_URL + '?action=getRapport&rapportId=' + encodeURIComponent(rapportId))
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (!data.ok || !data.rapport) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('error').style.display = 'block';
-        return;
-      }
+      if (!data.ok || !data.rapport) { showError('Rapport niet gevonden. Vraag een nieuwe link.'); return; }
       rapportData = data.rapport;
-      // Haal API URL op uit rapport data als die niet in URL staat
-      if (!API_URL && rapportData.apiUrl) {
-        API_URL = rapportData.apiUrl;
-      }
+      if (!API_URL && rapportData.apiUrl) API_URL = rapportData.apiUrl;
       renderRapport();
     })
-    .catch(function() {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('error').style.display = 'block';
-    });
+    .catch(function() { showError('Verbindingsfout. Controleer uw internetverbinding.'); });
 }
 
 function renderRapport() {
@@ -168,7 +155,7 @@ function renderRapport() {
 
   var html = '<div class="card">';
   html += '<h2>' + esc(r.projectNaam) + '</h2>';
-  html += '<div class="meta">' + (r.projectAdres ? esc(r.projectAdres) + ' &middot; ' : '') + esc(r.datum) + '</div>';
+  html += '<div style="font-size:12px;color:#6b6b67;margin-top:4px">' + (r.projectAdres ? esc(r.projectAdres) + ' &middot; ' : '') + esc(r.datum) + '</div>';
   var nOpen = items.filter(function(i){ return !i.done; }).length;
   var nDone = items.filter(function(i){ return i.done; }).length;
   html += '<div class="stats">';
@@ -176,7 +163,6 @@ function renderRapport() {
   html += '<div class="stat"><div class="stat-n dn" id="s-dn">' + nDone + '</div><div class="stat-l">Afgewerkt</div></div>';
   html += '</div></div>';
 
-  // Groepeer per locatie
   var groups = {};
   items.forEach(function(item) {
     var k = item.locatie || 'Algemeen';
@@ -195,27 +181,46 @@ function renderRapport() {
         });
         photos += '</div>';
       }
-      html += '<div class="item" id="wrap-' + item.id + '">';
-      html += '<div class="item-row">';
-      html += '<div class="chk-box" id="chk-' + item.id + '" onclick="toggle(\'' + item.id + '\')">';
-      html += '<div class="chk-tick"></div></div>';
-      html += '<div class="item-body">';
-      html += '<div class="item-title" id="title-' + item.id + '">' + esc(item.omschrijving) + '</div>';
       var meta = [];
       if (item.aannemer) meta.push(esc(item.aannemer));
       if (item.datum) meta.push(item.datum);
+
+      html += '<div class="item" id="wrap-' + item.id + '">';
+      html += '<div class="item-row">';
+      html += '<div class="chk-box" id="chk-' + item.id + '">';      html += '<div class="chk-tick"></div></div>';
+      html += '<div style="flex:1">';
+      html += '<div class="item-title" id="title-' + item.id + '">' + esc(item.omschrijving) + '</div>';
       if (meta.length) html += '<div class="item-meta">' + meta.join(' &middot; ') + '</div>';
-      html += '</div></div>';
       html += photos;
-      html += '<div class="nota-wrap">';
       html += '<div class="nota-label">&#128221; Notitie / opmerking</div>';
-      html += '<textarea class="nota-input" id="nota-' + item.id + '" placeholder="Voeg een opmerking toe..." oninput="saveNota(\'' + item.id + '\',this.value)"></textarea>';
-      html += '</div></div>';
+      html += '<textarea class="nota-input" id="nota-' + item.id + '" placeholder="Voeg een opmerking toe..." oninput="saveNota(event)"></textarea>';
+      html += '</div></div></div>';
     });
   });
 
   document.getElementById('content').innerHTML = html;
   document.getElementById('content').style.display = 'block';
+
+  // Attach nota listeners via event delegation
+  document.getElementById('content').addEventListener('input', function(e) {
+    if (e.target && e.target.classList.contains('nota-input')) {
+      var id = e.target.id.replace('nota-', '');
+      if (itemStates[id]) itemStates[id].notitie = e.target.value;
+    }
+  });
+
+  document.getElementById('lbx').addEventListener('click', function() { this.classList.remove('on'); });
+
+  // Event delegation for chk-box clicks
+  document.getElementById('content').addEventListener('click', function(e) {
+    var chk = e.target.closest('.chk-box');
+    if (chk) {
+      var id = chk.id.replace('chk-', '');
+      toggle(id);
+    }
+    var photo = e.target.closest('.item-photo');
+    if (photo) openLB(photo.src);
+  });
   updateCounter();
 }
 
@@ -227,12 +232,13 @@ function toggle(id) {
   var title = document.getElementById('title-' + id);
   chk.classList.toggle('checked', done);
   wrap.classList.toggle('done', done);
-  if (title) { title.classList.toggle('done-title', done); }
+  if (title) title.classList.toggle('done-title', done);
   updateCounter();
 }
 
-function saveNota(id, val) {
-  itemStates[id].notitie = val;
+function saveNota(e) {
+  var id = e.target.id.replace('nota-', '');
+  if (itemStates[id]) itemStates[id].notitie = e.target.value;
 }
 
 function updateCounter() {
@@ -252,21 +258,22 @@ function openLB(src) {
 
 function verstuur() {
   if (!rapportData || !API_URL) return;
-  var btn = document.getElementById('btn-verstuur');
+  var btn = document.querySelector('.bottombar .btn-gr');
   btn.disabled = true;
   btn.textContent = 'Versturen...';
+
+  var rapportId = getParam('id');
+  var projId = rapportId.indexOf('-') !== -1 ? rapportId.split('-').slice(1).join('-') : rapportId;
 
   var feedbackItems = Object.keys(itemStates).map(function(id) {
     return { id: id, gedaan: itemStates[id].gedaan, notitie: itemStates[id].notitie };
   });
 
-  var rapportId = getParam('id');
-
   fetch(API_URL, {
     method: 'POST',
     body: JSON.stringify({
       action: 'saveFeedback',
-      rapportId: (rapportId.indexOf('-') !== -1 ? rapportId.split('-').slice(1).join('-') : rapportId),
+      rapportId: projId,
       aannemer: rapportData.aannemer || '',
       items: feedbackItems
     })
