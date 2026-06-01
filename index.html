@@ -413,12 +413,10 @@ function mailRapport() {
 
   if (!email) { alert('Vul een e-mailadres in.'); return; }
 
-  // Genereer uniek rapport ID
-  var rapportId = 'r' + Date.now().toString(36);
+  var rapportId = 'r' + Date.now().toString(36) + '-' + curId;
   var datum = new Date().toLocaleDateString('nl-BE', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  var annTitel = annFil !== 'alle' ? ' – ' + annFil : '';
+  var annTitel = annFil !== 'alle' ? ' \u2013 ' + annFil : '';
 
-  // Filter items
   var items = (p.items||[]).slice();
   if (annFil !== 'alle') items = items.filter(function(i){ return (i.aannemer||'Geen aannemer') === annFil; });
   if (filVal === 'open') items = items.filter(function(i){ return !i.done; });
@@ -426,7 +424,6 @@ function mailRapport() {
 
   if (!items.length) { alert('Geen punten om te versturen.'); return; }
 
-  // Sla rapport op in Drive via API
   var rapportData = {
     action: 'saveRapport',
     rapportId: rapportId,
@@ -448,69 +445,120 @@ function mailRapport() {
     }
     setSyncOk();
 
-    // Bouw de rapport URL
     var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId;
+    var subject = 'Werfcontrole' + annTitel + ' \u2013 ' + p.naam + ' \u2013 ' + new Date().toLocaleDateString('nl-BE');
 
-    // Open Outlook met de link
-    var subject = encodeURIComponent('Werfcontrole' + annTitel + ' – ' + p.naam + ' – ' + new Date().toLocaleDateString('nl-BE'));
-    var body = encodeURIComponent('Rapport Werfcontrole - ' + p.naam + annTitel);
-
-    // Bouw mailto link - Outlook opent met onderwerp en link klaar
-    var mailtoLink = 'mailto:' + email + '?subject=' + subject + '&body=' + encodeURIComponent(rapportUrl);
-
-    // Kopieer ook de link naar klembord
-    try {
-      navigator.clipboard.writeText(
-        'Beste,' + '\n\n'
-        + 'Gelieve onderstaande punten na te kijken en af te vinken wat uitgevoerd is.' + '\n'
-        + 'U kunt ook een notitie toevoegen per punt.' + '\n\n'
-        + 'Klik op de link hieronder:' + '\n'
-        + rapportUrl + '\n\n'
-        + 'Project: ' + p.naam + '\n'
-        + (p.adres ? 'Adres: ' + p.adres + '\n' : '')
-        + 'Datum: ' + datum + '\n\n'
-        + 'Met vriendelijke groeten'
-      );
-    } catch(e) {}
-
-    window.location.href = mailtoLink
+    // Toon mail-venster met de tekst klaar om te kopi\u00ebren
+    showMailVenster(email, subject, rapportUrl, p, datum);
     closeModal('m-pdf');
-
-
   });
 }
 
-// ── Feedback bekijken ─────────────────────────────────────
-var currentRapportId = null;
+function showMailVenster(email, subject, rapportUrl, p, datum) {
+  // Maak modal aan als die nog niet bestaat
+  var existing = document.getElementById('m-mail');
+  if (!existing) {
+    var div = document.createElement('div');
+    div.className = 'mb hidden';
+    div.id = 'm-mail';
+    // Build mail modal HTML safely
+  var btnClose = document.createElement('button');
+  btnClose.className = 'btn-ca';
+  btnClose.textContent = 'Sluiten';
+  btnClose.addEventListener('click', function(){ div.classList.add('hidden'); });
+  var btnCopy = document.createElement('button');
+  btnCopy.className = 'btn-ic';
+  btnCopy.innerHTML = '&#128203; Kopieer tekst';
+  btnCopy.addEventListener('click', copyMailText);
+  var btnOutlook = document.createElement('button');
+  btnOutlook.className = 'btn-pr';
+  btnOutlook.innerHTML = '&#9993; Open in Outlook';
+  btnOutlook.addEventListener('click', openOutlook);
+  var maDiv = document.createElement('div');
+  maDiv.className = 'ma';
+  maDiv.style.cssText = 'gap:8px;flex-wrap:wrap';
+  maDiv.appendChild(btnClose);
+  maDiv.appendChild(btnCopy);
+  maDiv.appendChild(btnOutlook);
+  var copiedMsg = document.createElement('div');
+  copiedMsg.id = 'mail-copied';
+  copiedMsg.style.cssText = 'font-size:12px;color:var(--gr);text-align:center;margin-top:.5rem;display:none';
+  copiedMsg.textContent = '\u2713 Gekopieerd naar klembord!';
+  var mdDiv = div.querySelector('.md');
+  mdDiv.innerHTML = '<h3>\u2709 Mail versturen</h3>'
+    + '<div style="margin-bottom:.75rem"><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Aan</div><div id="mail-aan" style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--bdr)"></div></div>'
+    + '<div style="margin-bottom:.75rem"><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Onderwerp</div><div id="mail-subject" style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--bdr)"></div></div>'
+    + '<div style="margin-bottom:1rem"><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Mailtekst</div><textarea id="mail-body" style="width:100%;height:180px;border:1px solid var(--bdr);border-radius:8px;padding:10px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--tx);resize:none;outline:none" readonly></textarea></div>';
+  mdDiv.appendChild(maDiv);
+  mdDiv.appendChild(copiedMsg);
+  div.addEventListener('click', function(e){ if(e.target===div) div.classList.add('hidden'); });
 
-function openFeedback() {
-  var p = getP(); if (!p) return;
-  var list = document.getElementById('feedback-list');
-  list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--mu);font-size:13px">Feedback ophalen...</div>';
-  document.getElementById('m-feedback').classList.remove('hidden');
-  setSyncBusy();
+  document.getElementById('mail-aan').textContent = email;
+  document.getElementById('mail-subject').textContent = subject;
+  document.getElementById('mail-body').value = mailBody;
+  document.getElementById('mail-copied').style.display = 'none';
 
-  apiGet({ action: 'getFeedback', rapportId: curId }, function(err, data) {
-    setSyncOk();
-    if (!err && data && data.ok && data.items && data.items.length) {
-      var readKey = 'feedback-read-' + curId;
-      // Haal EERST de oude staat op voor rendering (om nieuw/gelezen te tonen)
-      var lastRead = {};
-      try { lastRead = JSON.parse(localStorage.getItem(readKey) || '{}'); } catch(e) {}
-      // Render met de oude staat zodat "Nieuw" correct getoond wordt
-      renderFeedbackItems(p, data.items, lastRead);
-      // Daarna pas markeren als gelezen
-      var newRead = {};
-      data.items.forEach(function(item) { newRead[item.itemId] = item.tijdstip; });
-      try { localStorage.setItem(readKey, JSON.stringify(newRead)); } catch(e) {}
-      // Verberg badge
-      var badge = document.getElementById('feedback-badge');
-      if (badge) badge.style.display = 'none';
-    } else {
-      list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
-    }
-  });
+  // Sla op voor Outlook knop
+  window._mailData = { email: email, subject: subject, rapportUrl: rapportUrl, projectNaam: p.naam, projectAdres: p.adres || '', datum: datum };
+
+  document.getElementById('m-mail').classList.remove('hidden');
+  // Selecteer de tekst automatisch
+  setTimeout(function() { document.getElementById('mail-body').select(); }, 200);
 }
+
+}
+
+function copyMailText() {
+  var ta = document.getElementById('mail-body');
+  ta.select();
+  try {
+    navigator.clipboard.writeText(ta.value).then(function() {
+      document.getElementById('mail-copied').style.display = 'block';
+      setTimeout(function(){ document.getElementById('mail-copied').style.display = 'none'; }, 3000);
+    });
+  } catch(e) {
+    document.execCommand('copy');
+    document.getElementById('mail-copied').style.display = 'block';
+  }
+}
+
+function openOutlook() {
+  var d = window._mailData;
+  if (!d) return;
+  var subject = encodeURIComponent(d.subject);
+  var bodyLines = [
+    'Beste,',
+    '',
+    'Onderstaand vindt u de link met openstaande punten.',
+    'Graag dit na te kijken en door te geven wanneer hiervoor een interventie kan gebeuren.',
+    'Na uitvoering kan u de punten afvinken en rapport terugmailen en indien gewenst opmerkingen bij de punten noteren.',
+    'Alvast bedankt',
+    '',
+    d.rapportUrl,
+    '',
+    '(Niet klikbaar? Kopieer en plak in uw browser)',
+    '',
+    '-----',
+    'Project: ' + d.projectNaam,
+    d.projectAdres ? 'Adres: ' + d.projectAdres : '',
+    'Datum: ' + d.datum,
+    '-----',
+    '',
+    'Met vriendelijke groeten,',
+    '',
+    'Voor VAN DE WALLE INDUSTRIAL BUILDING CONTRACTOR BVBA',
+    'Kristof Scheerlinck',
+    'Hoofdprojectleider',
+    'Permanent vertegenwoordiger Scheerlinck Kristof BV',
+    '',
+    'GSM     0479/98 68 35',
+    'Kristof.scheerlinck@vandewalle.be',
+    'www.ibcvt.be'
+  ].filter(function(l){ return l !== null; }).join(String.fromCharCode(13,10));
+  var body = encodeURIComponent(bodyLines);
+  window.location.href = 'mailto:' + d.email + '?subject=' + subject + '&body=' + body;
+}
+
 
 function renderFeedbackItems(p, items, readItems) {
   var list = document.getElementById('feedback-list');
@@ -548,43 +596,6 @@ function renderFeedbackItems(p, items, readItems) {
     html += '</div>';
   });
   list.innerHTML = html;
-}
-
-function showFeedbackModal(p) {
-  var list = document.getElementById('feedback-list');
-
-  // Controleer alle items op feedback
-  var items = (p.items||[]);
-  if (!items.length) {
-    list.innerHTML = '<div class="empty"><div style="font-size:28px;margin-bottom:.5rem">&#128233;</div><div style="font-size:13px">Nog geen feedback ontvangen.<br>Stuur eerst een rapport naar een aannemer.</div></div>';
-    document.getElementById('m-feedback').classList.remove('hidden');
-    return;
-  }
-
-  // Haal feedback op per aannemer
-  var aannemers = [...new Set(items.map(function(i){ return i.aannemer||'Geen aannemer'; }))].filter(Boolean);
-  var allFeedback = {};
-  var remaining = aannemers.length;
-
-  if (!remaining) {
-    list.innerHTML = '<div class="empty"><div style="font-size:13px">Geen aannemers gevonden.</div></div>';
-    document.getElementById('m-feedback').classList.remove('hidden');
-    return;
-  }
-
-  list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--mu);font-size:13px">Feedback ophalen...</div>';
-  document.getElementById('m-feedback').classList.remove('hidden');
-
-  // Haal feedback op voor elke aannemer
-  aannemers.forEach(function(aannemer) {
-    apiGet({ action: 'getFeedback', rapportId: 'latest-' + curId + '-' + aannemer.replace(/[^a-zA-Z0-9]/g,'-') }, function(err, data) {
-      remaining--;
-      if (!err && data && data.ok && data.items && data.items.length) {
-        allFeedback[aannemer] = data.items;
-      }
-      if (remaining === 0) renderFeedback(p, allFeedback);
-    });
-  });
 }
 
 function renderFeedback(p, allFeedback) {
