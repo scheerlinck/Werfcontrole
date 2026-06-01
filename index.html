@@ -500,7 +500,7 @@ function mailRapport() {
   apiPost(rapportData, function(err, data) {
     if (err || !data || !data.ok) {
       setSyncErr();
-      alert('Fout bij opslaan rapport. Probeer opnieuw.');
+      alert('Fout bij opslaan rapport: ' + (data ? JSON.stringify(data) : err ? err.toString() : 'onbekend'));
       return;
     }
     setSyncOk();
