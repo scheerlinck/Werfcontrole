@@ -905,15 +905,15 @@ function renderItems() {
     list.innerHTML = '<div class="empty"><div style="font-size:32px;margin-bottom:.5rem">&#128203;</div><div style="font-size:13px">Nog geen punten. Klik op "+ Punt".</div></div>';
     return;
   }
+  var filtered = applyFilters(items);
   if (activeTab === 'lijst') {
-    var sorted = items.filter(function(i){return !i.done;}).concat(items.filter(function(i){return i.done;}));
+    if (!filtered.length) { list.innerHTML = '<div class="empty"><div style="font-size:13px">Geen punten voor deze filter.</div></div>'; return; }
+    var sorted = filtered.filter(function(i){return !i.done;}).concat(filtered.filter(function(i){return i.done;}));
     sorted.forEach(function(item) { list.appendChild(makeItemEl(item)); });
   } else {
-    var filteredAnn = applyFilters(items);
-    var filteredAnn = applyFilters(items);
-    if (!filteredAnn.length) { list.innerHTML = emptyHtml('Geen punten voor deze filter.'); return; }
+    if (!filtered.length) { list.innerHTML = '<div class="empty"><div style="font-size:13px">Geen punten voor deze filter.</div></div>'; return; }
     var groups = {};
-    filteredAnn.forEach(function(i) { var k = i.aannemer||'Geen aannemer'; if(!groups[k]) groups[k]=[]; groups[k].push(i); });
+    filtered.forEach(function(i) { var k = i.aannemer||'Geen aannemer'; if(!groups[k]) groups[k]=[]; groups[k].push(i); });
     Object.keys(groups).sort().forEach(function(name) {
       var gi = groups[name];
       var nO2 = gi.filter(function(i){return !i.done;}).length;
