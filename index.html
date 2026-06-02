@@ -515,57 +515,63 @@ function mailRapport() {
 }
 
 function showMailVenster(email, subject, rapportUrl, p, datum) {
-  // Maak modal aan als die nog niet bestaat
-  var existing = document.getElementById('m-mail');
-  if (!existing) {
-    var div = document.createElement('div');
-    div.className = 'mb hidden';
-    div.id = 'm-mail';
-    // Build mail modal HTML safely
-  var btnClose = document.createElement('button');
-  btnClose.className = 'btn-ca';
-  btnClose.textContent = 'Sluiten';
-  btnClose.addEventListener('click', function(){ div.classList.add('hidden'); });
-  var btnCopy = document.createElement('button');
-  btnCopy.className = 'btn-ic';
-  btnCopy.innerHTML = '&#128203; Kopieer tekst';
-  btnCopy.addEventListener('click', copyMailText);
-  var btnOutlook = document.createElement('button');
-  btnOutlook.className = 'btn-pr';
-  btnOutlook.innerHTML = '&#9993; Open in Outlook';
-  btnOutlook.addEventListener('click', openOutlook);
-  var maDiv = document.createElement('div');
-  maDiv.className = 'ma';
-  maDiv.style.cssText = 'gap:8px;flex-wrap:wrap';
-  maDiv.appendChild(btnClose);
-  maDiv.appendChild(btnCopy);
-  maDiv.appendChild(btnOutlook);
-  var copiedMsg = document.createElement('div');
-  copiedMsg.id = 'mail-copied';
-  copiedMsg.style.cssText = 'font-size:12px;color:var(--gr);text-align:center;margin-top:.5rem;display:none';
-  copiedMsg.textContent = '\u2713 Gekopieerd naar klembord!';
-  var mdDiv = div.querySelector('.md');
-  mdDiv.innerHTML = '<h3>\u2709 Mail versturen</h3>'
-    + '<div style="margin-bottom:.75rem"><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Aan</div><div id="mail-aan" style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--bdr)"></div></div>'
-    + '<div style="margin-bottom:.75rem"><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Onderwerp</div><div id="mail-subject" style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--bdr)"></div></div>'
-    + '<div style="margin-bottom:1rem"><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Mailtekst</div><textarea id="mail-body" style="width:100%;height:180px;border:1px solid var(--bdr);border-radius:8px;padding:10px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--tx);resize:none;outline:none" readonly></textarea></div>';
-  mdDiv.appendChild(maDiv);
-  mdDiv.appendChild(copiedMsg);
-  div.addEventListener('click', function(e){ if(e.target===div) div.classList.add('hidden'); });
+  var mailModal = document.getElementById('m-mail');
+  if (!mailModal) {
+    mailModal = document.createElement('div');
+    mailModal.className = 'mb hidden';
+    mailModal.id = 'm-mail';
+    mailModal.innerHTML = '<div class="md" style="max-width:560px">'
+      + '<h3 style="margin-bottom:1rem">&#9993; Mail versturen</h3>'
+      + '<div style="margin-bottom:.75rem"><div class="fi"><label>Aan</label>'
+      + '<div id="mail-aan" style="font-size:14px;padding:8px 0;border-bottom:1px solid var(--bdr)"></div></div></div>'
+      + '<div style="margin-bottom:.75rem"><div class="fi"><label>Onderwerp</label>'
+      + '<div id="mail-subject" style="font-size:14px;padding:8px 0;border-bottom:1px solid var(--bdr)"></div></div></div>'
+      + '<div style="margin-bottom:1rem"><div class="fi"><label>Mailtekst (selecteer alles en kopieer)</label>'
+      + '<textarea id="mail-body" style="width:100%;height:200px;border:1px solid var(--bdr);border-radius:8px;padding:10px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--tx);resize:none;outline:none" readonly></textarea></div></div>'
+      + '<div id="mail-copied" style="font-size:12px;color:var(--gr);text-align:center;margin-bottom:.5rem;display:none">&#10003; Gekopieerd!</div>'
+      + '<div class="ma" style="flex-wrap:wrap;gap:8px">'
+      + '<button id="btn-mail-sluiten" class="btn-ca">Sluiten</button>'
+      + '<button id="btn-mail-copy" class="btn-ic">&#128203; Kopieer tekst</button>'
+      + '<button id="btn-mail-outlook" class="btn-pr">&#9993; Open in Outlook</button>'
+      + '</div></div>';
+    document.body.appendChild(mailModal);
+    mailModal.addEventListener('click', function(e) { if (e.target === mailModal) mailModal.classList.add('hidden'); });
+    document.getElementById('btn-mail-sluiten').addEventListener('click', function() { mailModal.classList.add('hidden'); });
+    document.getElementById('btn-mail-copy').addEventListener('click', copyMailText);
+    document.getElementById('btn-mail-outlook').addEventListener('click', openOutlook);
+  }
+
+  var mailBody = 'Beste,'
+    + '\n\nOnderstaand vindt u de link met openstaande punten.'
+    + '\nGraag dit na te kijken en door te geven wanneer hiervoor een interventie kan gebeuren.'
+    + '\nNa uitvoering kan u de punten afvinken en rapport terugmailen en indien gewenst opmerkingen bij de punten noteren.'
+    + '\nAlvast bedankt'
+    + '\n\n' + rapportUrl
+    + '\n\n(Niet klikbaar? Kopieer en plak in uw browser)'
+    + '\n\n-----'
+    + '\nProject: ' + p.naam
+    + (p.adres ? '\nAdres: ' + p.adres : '')
+    + '\nDatum: ' + datum
+    + '\n-----'
+    + '\n\nMet vriendelijke groeten,'
+    + '\n\nVoor VAN DE WALLE INDUSTRIAL BUILDING CONTRACTOR BVBA'
+    + '\nKristof Scheerlinck'
+    + '\nHoofdprojectleider'
+    + '\nPermanent vertegenwoordiger Scheerlinck Kristof BV'
+    + '\n\nGSM     0479/98 68 35'
+    + '\nKristof.scheerlinck@vandewalle.be'
+    + '\nwww.ibcvt.be';
 
   document.getElementById('mail-aan').textContent = email;
   document.getElementById('mail-subject').textContent = subject;
   document.getElementById('mail-body').value = mailBody;
   document.getElementById('mail-copied').style.display = 'none';
-
-  // Sla op voor Outlook knop
   window._mailData = { email: email, subject: subject, rapportUrl: rapportUrl, projectNaam: p.naam, projectAdres: p.adres || '', datum: datum };
-
-  document.getElementById('m-mail').classList.remove('hidden');
-  // Selecteer de tekst automatisch
-  setTimeout(function() { document.getElementById('mail-body').select(); }, 200);
-}
-
+  mailModal.classList.remove('hidden');
+  setTimeout(function() {
+    var ta = document.getElementById('mail-body');
+    if (ta) ta.select();
+  }, 200);
 }
 
 function copyMailText() {
