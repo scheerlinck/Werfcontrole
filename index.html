@@ -33,6 +33,8 @@ nav h2{font-size:15px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;
 .ps.dn{background:#D6F5E8;color:#1A6645}
 .add-pc{border:2px dashed var(--bdr);background:transparent;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);min-height:100px}
 .add-pc:hover{border-color:#999;color:var(--tx)}
+.filter-btn{border:1px solid var(--bdr);background:var(--bg);border-radius:20px;padding:4px 12px;font-size:12px;font-family:inherit;cursor:pointer;color:var(--mu);transition:all .15s}
+.filter-btn.active{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .del-pc{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:14px;color:#bbb;opacity:0}
 .pc:hover .del-pc{opacity:1}
 .del-pc:hover{color:var(--or)}
@@ -162,6 +164,16 @@ nav h2{font-size:15px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;
     <button class="tab active" id="tab-lijst">&#128203; Lijst</button>
     <button class="tab" id="tab-ann">&#128119; Per aannemer</button>
   </div>
+  <div id="filter-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
+    <div style="display:flex;gap:4px">
+      <button class="filter-btn active" id="fbtn-alle" onclick="setStatusFilter('alle',this)">Alle</button>
+      <button class="filter-btn" id="fbtn-open" onclick="setStatusFilter('open',this)">&#128308; Open</button>
+      <button class="filter-btn" id="fbtn-done" onclick="setStatusFilter('done',this)">&#9989; Afgewerkt</button>
+    </div>
+    <select id="filter-aannemer" style="margin-left:auto;border:1px solid var(--bdr);border-radius:20px;padding:4px 10px;font-size:12px;font-family:inherit;background:var(--bg);color:var(--tx);outline:none;cursor:pointer">
+      <option value="alle">Alle aannemers</option>
+    </select>
+  </div>
   <div id="items-list"></div>
 </div>
 
@@ -273,6 +285,8 @@ var curId = null;
 var activeTab = 'lijst';
 var pendingPhotos = [];
 var pdfOpt = 'aannemer';
+var statusFilter = 'alle';
+var aannemerFilter = 'alle';
 
 // ── Storage ───────────────────────────────────────────────
 function loadLocal() {
@@ -393,7 +407,7 @@ function loadFromSheet() {
     db.projects = data.projects || [];
     saveLocal();
     renderProjects();
-    if (curId) renderItems();
+    if (curId) { renderItems(); updateAannemerFilter(); }
   });
 }
 
@@ -723,6 +737,10 @@ document.getElementById('btn-feedback').addEventListener('click', openFeedback);
 document.getElementById('btn-close-feedback').addEventListener('click', function() { closeModal('m-feedback'); });
 document.getElementById('tab-lijst').addEventListener('click', function() { setTab('lijst'); });
 document.getElementById('tab-ann').addEventListener('click', function() { setTab('aannemer'); });
+document.getElementById('filter-aannemer').addEventListener('change', function() {
+  aannemerFilter = this.value;
+  renderItems();
+});
 document.getElementById('po-ann').addEventListener('click', function() { selPdf('aannemer'); });
 document.getElementById('po-stat').addEventListener('click', function() { selPdf('status'); });
 document.getElementById('foto-input').addEventListener('change', function() { handlePhotos(this); });
@@ -793,9 +811,13 @@ function openProject(id) {
   document.getElementById('sc-projects').classList.remove('active');
   document.getElementById('sc-detail').classList.add('active');
   activeTab = 'lijst';
+  statusFilter = 'alle';
+  aannemerFilter = 'alle';
   document.getElementById('tab-lijst').classList.add('active');
   document.getElementById('tab-ann').classList.remove('active');
+  document.querySelectorAll('.filter-btn').forEach(function(b,i){ b.classList.toggle('active', i===0); });
   renderItems();
+  updateAannemerFilter();
   loadFromSheet();
   setTimeout(checkFeedbackBadge, 2000);
 }
@@ -816,7 +838,40 @@ function setTab(tab) {
   activeTab = tab;
   document.getElementById('tab-lijst').classList.toggle('active', tab === 'lijst');
   document.getElementById('tab-ann').classList.toggle('active', tab === 'aannemer');
+  var annSel = document.getElementById('filter-aannemer');
+  if (annSel) annSel.style.display = tab === 'aannemer' ? 'none' : '';
   renderItems();
+}
+
+function setStatusFilter(val, btn) {
+  statusFilter = val;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderItems();
+}
+
+function updateAannemerFilter() {
+  var p = getP(); if (!p) return;
+  var sel = document.getElementById('filter-aannemer');
+  if (!sel) return;
+  var aannemers = [];
+  (p.items||[]).forEach(function(i) {
+    var k = i.aannemer || 'Geen aannemer';
+    if (aannemers.indexOf(k) < 0) aannemers.push(k);
+  });
+  aannemers.sort();
+  var prev = sel.value;
+  sel.innerHTML = '<option value="alle">Alle aannemers</option>'
+    + aannemers.map(function(a) { return '<option value="'+esc(a)+'">'+esc(a)+'</option>'; }).join('');
+  if (prev && aannemers.indexOf(prev) >= 0) sel.value = prev;
+}
+
+function applyFilters(items) {
+  var result = items;
+  if (statusFilter === 'open') result = result.filter(function(i) { return !i.done; });
+  if (statusFilter === 'done') result = result.filter(function(i) { return i.done; });
+  if (aannemerFilter !== 'alle') result = result.filter(function(i) { return (i.aannemer||'Geen aannemer') === aannemerFilter; });
+  return result;
 }
 
 function renderItems() {
@@ -836,8 +891,11 @@ function renderItems() {
     var sorted = items.filter(function(i){return !i.done;}).concat(items.filter(function(i){return i.done;}));
     sorted.forEach(function(item) { list.appendChild(makeItemEl(item)); });
   } else {
+    var filteredAnn = applyFilters(items);
+    var filteredAnn = applyFilters(items);
+    if (!filteredAnn.length) { list.innerHTML = emptyHtml('Geen punten voor deze filter.'); return; }
     var groups = {};
-    items.forEach(function(i) { var k = i.aannemer||'Geen aannemer'; if(!groups[k]) groups[k]=[]; groups[k].push(i); });
+    filteredAnn.forEach(function(i) { var k = i.aannemer||'Geen aannemer'; if(!groups[k]) groups[k]=[]; groups[k].push(i); });
     Object.keys(groups).sort().forEach(function(name) {
       var gi = groups[name];
       var nO2 = gi.filter(function(i){return !i.done;}).length;
@@ -878,7 +936,17 @@ function makeItemEl(item) {
   var meta = [];
   if (item.locatie) meta.push('<strong>'+esc(item.locatie)+'</strong>');
   if (item.aannemer) meta.push(esc(item.aannemer));
-  if (item.datum) meta.push(item.datum);
+  if (item.datum) {
+    // Formatteer datum netjes als die een lange string is
+    var d = item.datum;
+    try {
+      var parsed = new Date(d);
+      if (!isNaN(parsed) && d.indexOf('/') === -1) {
+        d = parsed.toLocaleDateString('nl-BE');
+      }
+    } catch(e) {}
+    meta.push(d);
+  }
   if (meta.length) { var md = document.createElement('div'); md.className = 'im'; md.innerHTML = meta.join(' &middot; '); body.appendChild(md); }
   var del = document.createElement('button'); del.className = 'btn-dl'; del.innerHTML = '&#10005;';
   del.addEventListener('click', function() { delItem(item.id); });
@@ -1045,7 +1113,14 @@ function genPdf() {
       var meta = [];
       if (item.locatie) meta.push(item.locatie);
       if (item.aannemer) meta.push(item.aannemer);
-      if (item.datum) meta.push(item.datum);
+      if (item.datum) {
+    var d = item.datum;
+    try {
+      var parsed = new Date(d);
+      if (!isNaN(parsed) && d.indexOf('/') === -1) d = parsed.toLocaleDateString('nl-BE');
+    } catch(ex) {}
+    meta.push(d);
+  }
       if (meta.length) { var metaEl=document.createElement('div'); metaEl.style.cssText='font-size:11px;color:#888;margin-top:2px'; metaEl.textContent=meta.join(' · '); contentDiv.appendChild(metaEl); }
       if (showFoto && item.photos && item.photos.length) {
         var pDiv=document.createElement('div'); pDiv.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-top:10px';
