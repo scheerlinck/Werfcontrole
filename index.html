@@ -741,6 +741,24 @@ document.getElementById('filter-aannemer').addEventListener('change', function()
   aannemerFilter = this.value;
   renderItems();
 });
+document.getElementById('fbtn-alle').addEventListener('click', function() {
+  statusFilter = 'alle';
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  this.classList.add('active');
+  renderItems();
+});
+document.getElementById('fbtn-open').addEventListener('click', function() {
+  statusFilter = 'open';
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  this.classList.add('active');
+  renderItems();
+});
+document.getElementById('fbtn-done').addEventListener('click', function() {
+  statusFilter = 'done';
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  this.classList.add('active');
+  renderItems();
+});
 document.getElementById('po-ann').addEventListener('click', function() { selPdf('aannemer'); });
 document.getElementById('po-stat').addEventListener('click', function() { selPdf('status'); });
 document.getElementById('foto-input').addEventListener('change', function() { handlePhotos(this); });
