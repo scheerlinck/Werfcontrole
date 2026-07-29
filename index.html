@@ -519,7 +519,7 @@ function mailRapport() {
     }
     setSyncOk();
 
-    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId;
+    var rapportUrl = 'https://scheerlinck.github.io/Werfcontrole/rapport.html?id=' + rapportId + '&api=' + encodeURIComponent(API_URL);
     var subject = 'Werfcontrole' + annTitel + ' \u2013 ' + p.naam + ' \u2013 ' + new Date().toLocaleDateString('nl-BE');
 
     // Toon mail-venster met de tekst klaar om te kopi\u00ebren
